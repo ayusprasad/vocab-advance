@@ -18,20 +18,10 @@ from langchain.prompts import PromptTemplate
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 
-# Path to the nltk_data folder (adjust this based on your environment)
-nltk_data_path = os.path.expanduser('~/nltk_data')
-
-# Delete the nltk_data folder if it exists
-if os.path.exists(nltk_data_path):
-    shutil.rmtree(nltk_data_path)
-
-# Download the necessary NLTK data files again
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 
 # # Download the NLTK data files
-# nltk.download('punkt')
-# nltk.download('averaged_perceptron_tagger')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 
 # Function to get grammar information about a word
 def get_grammar_info(word):
