@@ -17,7 +17,7 @@ from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
-
+nltk.download('punkt_tab')
 
 # # Download the NLTK data files
 nltk.download('punkt')
