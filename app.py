@@ -2,7 +2,6 @@ import langchain_groq
 import streamlit as st
 import os
 import random
-import NLTK Downloader
 from groq import Groq
 import nltk
 from nltk import pos_tag, word_tokenize
