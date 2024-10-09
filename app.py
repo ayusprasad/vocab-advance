@@ -49,7 +49,7 @@ def main():
     # Get Groq API key
     api_key = os.getenv("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")
 
-    client = Groq(api_key=api_key)
+    client = Groq(api_key="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")
 
     # Display the logo and title
     st.title("AI-Enhanced Vocabulary & Grammar Assistant!")
