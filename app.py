@@ -16,6 +16,8 @@ from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 
 # Download the NLTK data files
 nltk.download('punkt')
