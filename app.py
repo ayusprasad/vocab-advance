@@ -2,7 +2,6 @@ import langchain_groq
 import streamlit as st
 import os
 from groq import Groq
-import random
 import nltk
 from nltk import pos_tag, word_tokenize
 from langchain.chains import ConversationChain, LLMChain
@@ -20,120 +19,108 @@ from langchain.prompts import PromptTemplate
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 
-
+# Function to get grammar information about a word
 def get_grammar_info(word):
-    """
-    Takes a word as input and returns its part of speech and any grammar-related information.
-    """
     tokens = word_tokenize(word)
     pos_tags = pos_tag(tokens)
-
-    # This will return a list of tuples (word, part_of_speech)
     return pos_tags
 
-
+# Main function for the Streamlit app
 def main():
-    """
-    This function is the main entry point of the application. It sets up the Groq client, the Streamlit interface, and handles the chat interaction.
-    """
+    st.set_page_config(page_title="AI Grammar & Vocabulary Assistant", layout="wide", initial_sidebar_state="expanded")
+    st.markdown("""
+    <style>
+        .reportview-container {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            color: #ffdd59;
+        }
+        .sidebar .sidebar-content {
+            background: #292E49;
+            color: white;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
     # Get Groq API key
-    api_key = os.getenv("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")
+    api_key = os.getenv("GROQ_API_KEY")
 
-    client = Groq(api_key="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")
+    client = Groq(api_key=api_key)
 
-    # Display the Groq logo
-    spacer, col = st.columns([5, 1])
+    # Display the logo and title
+    st.title("AI-Enhanced Vocabulary & Grammar Assistant!")
+    st.write("🚀 Learn, Discover, and Master New Words Effortlessly! Start your journey with our smart chatbot. Let's go!")
 
-    # The title and greeting message of the Streamlit application
-    st.title("AI-Enhanced Vocabulary and Grammar Assistant!")
-    st.write(
-        "Hello! I'm your friendly Groq chatbot. I can help answer your questions, provide grammar insights, or just chat. Discover, Learn, and Master New Words Effortlessly! Let's start our conversation.")
+    # Sidebar options
+    st.sidebar.title('Settings')
+    system_prompt = st.sidebar.text_area("Customize System Prompt:", "You are a helpful and knowledgeable assistant.")
+    model = st.sidebar.selectbox('Choose a Model', ['llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it'])
+    conversational_memory_length = st.sidebar.slider('Conversational Memory Length:', 1, 10, value=5)
 
-    # Add customization options to the sidebar
-    st.sidebar.title('Customization')
-    system_prompt = st.sidebar.text_input("System prompt:")
-    model = st.sidebar.selectbox(
-        'Choose a model',
-        ['llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it']
-    )
-    conversational_memory_length = st.sidebar.slider('Conversational memory length:', 1, 10, value=5)
+    memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
 
-    memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history",
-                                            return_messages=True)
+    user_question = st.text_input("Enter a word or sentence:")
 
-    user_question = st.text_input("Enter a word to get its grammar details:")
-
-    # session state variable
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     else:
         for message in st.session_state.chat_history:
-            memory.save_context(
-                {'input': message['human']},
-                {'output': message['AI']}
-            )
+            memory.save_context({'input': message['human']}, {'output': message['AI']})
 
-    # Initialize Groq Langchain chat object and conversation
-    groq_chat = ChatGroq(
-        groq_api_key="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",
-        model_name=model
-    )
+    # Initialize the Groq Langchain chat object
+    groq_chat = ChatGroq(groq_api_key=api_key, model_name=model)
 
     if user_question:
-        # Get grammar-related information for the word
         grammar_info = get_grammar_info(user_question)
 
-        # Construct a chat prompt template using various components
         prompt = ChatPromptTemplate.from_messages(
             [
-                SystemMessage(
-                    content=system_prompt
-                ),  # This is the persistent system prompt that is always included at the start of the chat.
-
-                MessagesPlaceholder(
-                    variable_name="chat_history"
-                ),
-                # This placeholder will be replaced by the actual chat history during the conversation. It helps in maintaining context.
-
-                HumanMessagePromptTemplate.from_template(
-                    "{human_input}"
-                ),  # This template is where the user's current input will be injected into the prompt.
+                SystemMessage(content=system_prompt),
+                MessagesPlaceholder(variable_name="chat_history"),
+                HumanMessagePromptTemplate.from_template("{human_input}"),
             ]
         )
 
-        # Create a conversation chain using the LangChain LLM (Language Learning Model)
         conversation = LLMChain(
-            llm=groq_chat,  # The Groq LangChain chat object initialized earlier.
-            prompt=prompt,  # The constructed prompt template.
-            verbose=True,  # Enables verbose output, which can be useful for debugging.
-            memory=memory,  # The conversational memory object that stores and manages the conversation history.
+            llm=groq_chat,
+            prompt=prompt,
+            verbose=True,
+            memory=memory,
         )
 
-        # The chatbot's answer is generated by sending the full prompt to the Groq API.
         response = conversation.predict(human_input=user_question)
         message = {'human': user_question, 'AI': response}
+        grammar_message = f"🔍 Grammar Info for '{user_question}': {grammar_info}"
 
-        # Add grammar information to the response
-        grammar_message = f"Grammar Info for '{user_question}': {grammar_info}"
         st.session_state.chat_history.append(message)
-        st.write("Chatbot:", response)
-        st.write(grammar_message)
+        st.write(f"**Chatbot:** {response}")
+        st.write(f"**{grammar_message}**")
 
-    import time
+        # Allow user feedback
+        st.sidebar.write("Did you find this helpful?")
+        st.sidebar.button("👍 Yes")
+        st.sidebar.button("👎 No")
 
-    time.sleep(4)
+    # New feature: Word of the Day
+    st.sidebar.write("## 🌟 Word of the Day")
+    words = ["serendipity", "ephemeral", "luminous", "zenith"]
+    st.sidebar.write(random.choice(words))
 
-    print("This message will display first.")
-    print()  # Blank line
-    time.sleep(1)
+    # New feature: Favorite Responses
+    if 'favorites' not in st.session_state:
+        st.session_state.favorites = []
+    
+    if st.button("Save Response"):
+        st.session_state.favorites.append(response)
+        st.sidebar.write("✅ Response saved!")
 
-    print("Here's a message with a gap below it.")
-    print("\n" * 3)  # Adds 3 blank lines
-    time.sleep(1)
-
-    print("This message will display after the gaps.")
-
+    st.sidebar.write("## ⭐ Your Saved Responses")
+    for fav in st.session_state.favorites:
+        st.sidebar.write(f"- {fav}")
 
 if __name__ == "__main__":
     main()
