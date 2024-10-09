@@ -72,7 +72,8 @@ def main():
             memory.save_context({'input': message['human']}, {'output': message['AI']})
 
     # Initialize the Groq Langchain chat object
-    groq_chat = ChatGroq(groq_api_key=api_key, model_name=model)
+    groq_chat = ChatGroq(groq_api_key="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
+", model_name=model)
 
     if user_question:
         grammar_info = get_grammar_info(user_question)
