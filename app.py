@@ -47,7 +47,7 @@ def main():
     """, unsafe_allow_html=True)
 
     # Get Groq API key
-    api_key = os.getenv("GROQ_API_KEY")
+    api_key = os.getenv("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")
 
     client = Groq(api_key=api_key)
 
